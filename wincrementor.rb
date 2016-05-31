@@ -40,10 +40,9 @@ begin
   # The last should probably be equivalent to just defaulting version_string 
   # to "0.0.0" if none was provided.
 
-
   input = Docopt::docopt(doc)
 
-  # Defaults (Fo now hardcoded)
+  # Defaults
   major = /\+major/
   minor = /\+minor/
   patch = /\+patch/
