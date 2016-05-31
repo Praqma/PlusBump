@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 #encoding: utf-8
 require 'docopt'
+require 'semver'
 require 'rugged'
 
 doc = <<DOCOPT
@@ -48,29 +49,35 @@ begin
   # Current directory
   repository = Rugged::Repository.new(Dir.pwd) 
 
+  # Set up rugged to traverse our repoitory
   head = repository.lookup(repository.head.target.oid)
   tail = repository.rev_parse(input['<ref>'])
-
   w = Rugged::Walker.new(repository)
-  w.sorting(Rugged::SORT_TOPO)  
-  puts w.inspect
+  w.sorting(Rugged::SORT_TOPO)    
   w.push(head)
 
-  result = base
+
+  # Set the intermediate result to the base
+  result = SemVer.new
 
   w.each do |commit|
     #If we find the commit. Abort
     if commit.oid == tail      
       break
     end
+
     if major =~ commit.message
-      result = increment_major(result)      
+      result.major += 1
+      #result.minor = 0
+      #result.patch = 0
     elsif minor =~ commit.message
-      result = increment_minor(result)
+      result.minor += 1
     else
-      result = increment_patch(result)
+      result.patch += 1
     end
   end
+
+  puts result.to_s
   
   # look at all commits between <ref> and HEAD. 
   # Look for commit-message mentions 
