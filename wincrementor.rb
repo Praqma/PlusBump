@@ -69,11 +69,9 @@ begin
   # X.Y.Z-SPECIAL
   split = base.split('-')
   v_number = split[0].split('.')
-  s_special = '-'+split[1]
-
   special = ''
-  if s_special
-    special = s_special
+  if (split[1])
+    special = '-'+split[1]
   end
 
   result = SemVer.new(v_number[0].to_i, v_number[1].to_i, v_number[2].to_i, special)
