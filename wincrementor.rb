@@ -68,8 +68,8 @@ begin
 
     if major =~ commit.message
       result.major += 1
-      #result.minor = 0
-      #result.patch = 0
+      result.minor = 0
+      result.patch = 0
     elsif minor =~ commit.message
       result.minor += 1
     else
