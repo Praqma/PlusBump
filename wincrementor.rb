@@ -70,6 +70,7 @@ begin
   result = base
 
   walker.each do |commit|
+    #If we find the commit. Abort
     if commit.oid == tail      
       break
     end
