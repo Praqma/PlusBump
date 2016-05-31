@@ -14,20 +14,8 @@ Options:
     Show this screen.
      
   --majorpattern=<major_pattern>
-  
-    Pattern that specifies a x
     
-  --majorpattern=<major_pattern>
-
-    Format that describes how your release tags look. This is used together with -t LATEST. We always check agains HEAD/TIP.
-
-  <ref>
-
-    Some ref to the git commit where current version was released
-
-  semver_version_string
-
-    Optional version string that you want bumped
+  --minorpattern=<minor_pattern>
 
 
 DOCOPT
@@ -60,16 +48,17 @@ begin
   # Current directory
   repository = Rugged::Repository.new(Dir.pwd) 
 
-  head = repository.head.target
+  head = repository.lookup(repository.head.target.oid)
   tail = repository.rev_parse(input['<ref>'])
 
-  walker = Rugged::Walker.new(repository)
-  walker.sorting(Rugged::SORT_TOPO)
-  waĺker.push(head.oid)
+  w = Rugged::Walker.new(repository)
+  w.sorting(Rugged::SORT_TOPO)  
+  puts w.inspect
+  w.push(head)
 
   result = base
 
-  walker.each do |commit|
+  w.each do |commit|
     #If we find the commit. Abort
     if commit.oid == tail      
       break
@@ -102,7 +91,7 @@ begin
 
 
 rescue Docopt::Exit => e
-  puts "versionbumpfinder"
-  puts "#{version}\n"
+  puts "Wincrementor 1.0"
+  puts ""
   puts e.message
 end
