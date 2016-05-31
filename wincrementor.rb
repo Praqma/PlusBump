@@ -76,7 +76,7 @@ begin
   w = Rugged::Walker.new(repository)
   # We need to walk 'backwards'
   w.push(head)
-
+  w.hide(tail)
   # Set the intermediate result to the base
   # X.Y.Z-SPECIAL
   split = base.split('-')
@@ -92,9 +92,7 @@ begin
 #  puts "Tail:"+tail.oid
   w.each do |commit|
     puts "Commit: " + commit.oid if debug
-    if commit.oid == tail.oid      
-      break
-    elsif major =~ commit.message
+    if major =~ commit.message
       puts "bumps major" if debug
       major_bump = true
     elsif minor =~ commit.message
