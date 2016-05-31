@@ -6,7 +6,7 @@ require 'rugged'
 
 doc = <<DOCOPT
 Usage:
-  #{__FILE__} [--majorpattern=<major_pattern>] [--minorpattern=<minor_pattern>] [--tag-commit] <ref>  [<semver_version_string>] [--prefix=<prefix>]
+  #{__FILE__} [--majorpattern=<major_pattern>] [--minorpattern=<minor_pattern>] [--tag-commit] (--latest=<tag-glob> | <ref>)  [<semver_version_string>] [--prefix=<prefix>]
   #{__FILE__} -h|--help
 
 Options:
@@ -25,6 +25,14 @@ Options:
   --prefix=<prefix>  
 
     Specify a prefix to add before the resulting version string
+
+  --latest=<tag-glob>  
+
+    Specify a glob pattern to search for last matching tag instead of
+    providing a specific ref.
+    Will attempt to use everything after <tag-glob> as the version string
+    so be sure to provide _entire_ prefix. 
+    E.g. use "R_" if your versions are "R_1.2.3"
 
 DOCOPT
 
@@ -69,14 +77,33 @@ begin
   
   # Current directory
   repository = Rugged::Repository.new(Dir.pwd) 
+  tagcollection = Rugged::TagCollection.new(repository)
 
   # Set up rugged to traverse our repoitory
   head = repository.lookup(repository.head.target.oid)
-  tail = repository.rev_parse(input['<ref>'])
+
   w = Rugged::Walker.new(repository)
   # We need to walk 'backwards'
   w.push(head)
-  w.hide(tail)
+
+  if input['--latest'].nil?
+    tail = repository.rev_parse(input['<ref>'])
+    w.hide(tail)
+  else
+    candidates = []
+    tail_glob = input['--latest']
+    puts "globbing for " + tail_glob if debug
+
+    tagcollection.each(tail_glob+'*') do |tag|
+      puts "checking " + tag.name if debug
+      candidates << tag unless repository.merge_base(tag.target, head).nil?
+    end
+    candidates.sort! {|a,b| a.target.time <=> b.target.time }
+    latest_match = candidates.last
+    puts "Match: #{latest_match.target.oid}"
+    w.hide(latest_match.target)
+    base = latest_match.name.sub(tail_glob,'')
+  end
   # Set the intermediate result to the base
   # X.Y.Z-SPECIAL
   split = base.split('-')
@@ -130,7 +157,7 @@ begin
   puts final_res
 
 rescue Docopt::Exit => e
-  puts "Wincrementor 1.0"
+  puts "Wincrementor 1.2"
   puts ""
   puts e.message
 end
