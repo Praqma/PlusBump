@@ -6,7 +6,7 @@ require 'rugged'
 
 doc = <<DOCOPT
 Usage:
-  #{__FILE__} [--majorpattern=<major_pattern>] [--minorpattern=<minor_pattern>] [--tag-commit] <ref>  [<semver_version_string>]
+  #{__FILE__} [--majorpattern=<major_pattern>] [--minorpattern=<minor_pattern>] [--tag-commit] <ref>  [<semver_version_string>] [--prefix=<prefix>]
   #{__FILE__} -h|--help
 
 Options:
@@ -21,6 +21,10 @@ Options:
   --tag-commit
 
     Tags HEAD with the version number computed.
+
+  --prefix=<prefix>  
+
+    Specify a prefix to add before the resulting version string
 
 DOCOPT
 
@@ -53,9 +57,14 @@ begin
   debug = false
   # Base value 
   base = '0.0.0'
+  prefix = ''
 
   if input['<semver_version_string>']
     base = input['<semver_version_string>']
+  end
+
+  unless input['--prefix'].nil?
+    prefix = input['--prefix']
   end
   
   # Current directory
@@ -113,7 +122,7 @@ begin
     puts "No version increment"   
   end
 
-  final_res = result.format "%M.%m.%p%s"
+  final_res = prefix + (result.format "%M.%m.%p%s")
 
   if (input['--tag-commit'])
     repository.tags.create(final_res, 'HEAD', true)
