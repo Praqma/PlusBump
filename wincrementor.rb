@@ -47,6 +47,7 @@ begin
   minor = /\+minor/
   patch = /\+patch/
 
+  debug = false
   # Base value 
   base = '0.0.0'
 
@@ -62,7 +63,6 @@ begin
   tail = repository.rev_parse(input['<ref>'])
   w = Rugged::Walker.new(repository)
   # We need to walk 'backwards'
-  w.sorting(Rugged::SORT_REVERSE)    
   w.push(head)
 
   # Set the intermediate result to the base
@@ -74,24 +74,40 @@ begin
     special = '-'+split[1]
   end
 
-  result = SemVer.new(v_number[0].to_i, v_number[1].to_i, v_number[2].to_i, special)
-
+  major_bump = false
+  minor_bump = false
+  patch_bump = false
+#  puts "Tail:"+tail.oid
   w.each do |commit|
-    puts commit.oid
-    if major =~ commit.message
-      result.major += 1
-      result.minor = 0
-      result.patch = 0
+    puts "Commit: " + commit.oid if debug
+    if commit.oid == tail.oid      
+      break
+    elsif major =~ commit.message
+      puts "bumps major" if debug
+      major_bump = true
     elsif minor =~ commit.message
-      result.minor += 1
-      result.patch = 0
+      puts "bump minor" if debug
+      minor_bump = true
     else
-      result.patch += 1
+      patch_bump = true
     end
     #If we find the commit. Abort
-    if commit.oid == tail      
-      break
-    end
+  end
+
+
+  result = SemVer.new(v_number[0].to_i, v_number[1].to_i, v_number[2].to_i, special)
+
+  if major_bump
+    result.major += 1
+    result.minor = 0
+    result.patch = 0
+  elsif minor_bump
+    result.minor += 1
+    result.patch = 0
+  elsif patch_bump
+    result.patch += 1
+  else
+    puts "No version increment"   
   end
 
   puts result.format "%M.%m.%p%s"
