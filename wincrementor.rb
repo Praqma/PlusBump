@@ -6,7 +6,7 @@ require 'rugged'
 
 doc = <<DOCOPT
 Usage:
-  #{__FILE__} [--majorpattern=<major_pattern>] [--minorpattern=<minor_pattern>] <ref>  [<semver_version_string>]
+  #{__FILE__} [--majorpattern=<major_pattern>] [--minorpattern=<minor_pattern>] [--tag-commit] <ref>  [<semver_version_string>]
   #{__FILE__} -h|--help
 
 Options:
@@ -18,6 +18,9 @@ Options:
     
   --minorpattern=<minor_pattern>
 
+  --tag-commit
+
+    Tags HEAD with the version number computed.
 
 DOCOPT
 
@@ -110,7 +113,14 @@ begin
     puts "No version increment"   
   end
 
-  puts result.format "%M.%m.%p%s"
+  final_res = result.format "%M.%m.%p%s"
+
+  if (input['--tag-commit'])
+    repository.tags.create(final_res, 'HEAD', true)
+    puts "created tag with name #{final_res}" if debug
+  end
+
+  puts final_res
 
 rescue Docopt::Exit => e
   puts "Wincrementor 1.0"
