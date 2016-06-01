@@ -15,8 +15,14 @@ Options:
     Show this screen.
      
   --majorpattern=<major_pattern>
+  -a --majorpattern=<major_pattern>
+    Specify an alternative (regex) pattern that indicates a major version bump.
+    E.g. --majorpattern='\\+major'
     
   --minorpattern=<minor_pattern>
+  -i --minorpattern=<minor_pattern>
+    Specify an alternative (regex) pattern that indicates a minor version bump.
+    E.g. --minorpattern='\\+minor'
 
   --tag-commit
 
@@ -35,6 +41,11 @@ Options:
     E.g. use "R_" if your versions are "R_1.2.3"
 
 DOCOPT
+
+# Note: If you are reading the above usage in the source code and not using --help, 
+# then ignore the double escapes in the usage examples. 
+# On the command line you have to write --majorpattern='\+major'
+# The extra escape is to make it print that way in the usage message.
 
 begin
 
@@ -73,6 +84,16 @@ begin
 
   unless input['--prefix'].nil?
     prefix = input['--prefix']
+  end
+
+  unless input['--majorpattern'].nil?
+    majorpatternstring = input['--majorpattern']
+    major = Regexp.new(majorpatternstring)
+  end
+
+  unless input['--minorpattern'].nil?
+    majorpatternstring = input['--minorpattern']
+    major = Regexp.new(majorpatternstring)
   end
   
   # Current directory
