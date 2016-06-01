@@ -4,41 +4,38 @@ require 'docopt'
 require 'semver'
 require 'rugged'
 
+
 doc = <<DOCOPT
 Usage:
-  #{__FILE__} [--majorpattern=<major_pattern>] [--minorpattern=<minor_pattern>] [--tag-commit] (--latest=<tag-glob> | <ref>)  [<semver_version_string>] [--prefix=<prefix>]
+  #{__FILE__} [-t] [-p <prefix>] [-a <maj_p>] [-i <min_p>] <ref> [<semver_version_string>] 
+  #{__FILE__} [-t] [-p <prefix>] [-a <maj_p>] [-i <min_p>] --latest=<tag-glob> [<semver_version_string>] 
   #{__FILE__} -h|--help
 
 Options:
-  -h --help
-             
-    Show this screen.
+  -h --help        Show this screen.
+  -t --tag-commit  Actually tag HEAD with the version number computed.
      
-  --majorpattern=<major_pattern>
-  -a --majorpattern=<major_pattern>
-    Specify an alternative (regex) pattern that indicates a major version bump.
-    E.g. --majorpattern='\\+major'
-    
-  --minorpattern=<minor_pattern>
-  -i --minorpattern=<minor_pattern>
-    Specify an alternative (regex) pattern that indicates a minor version bump.
-    E.g. --minorpattern='\\+minor'
-
-  --tag-commit
-
-    Tags HEAD with the version number computed.
-
-  --prefix=<prefix>  
-
-    Specify a prefix to add before the resulting version string
-
-  --latest=<tag-glob>  
+  -l --latest=<tag-glob>  
 
     Specify a glob pattern to search for last matching tag instead of
     providing a specific ref.
     Will attempt to use everything after <tag-glob> as the version string
     so be sure to provide _entire_ prefix. 
     E.g. use "R_" if your versions are "R_1.2.3"
+
+  -p --prefix=<prefix>  
+
+    Specify a prefix to add before the resulting version string
+
+  -a --majorpattern=<major_pattern>
+
+    Specify an alternative (regex) pattern that indicates a major version bump.
+    E.g. --majorpattern='\\+major'
+    
+  -i --minorpattern=<minor_pattern>
+
+    Specify an alternative (regex) pattern that indicates a minor version bump.
+    E.g. --minorpattern='\\+minor'
 
 DOCOPT
 
@@ -68,13 +65,13 @@ begin
 
   input = Docopt::docopt(doc)
 
+  #puts input 
+  debug = false
+
   # Defaults
   major = /\+major/
   minor = /\+minor/
   patch = /\+patch/
-
-  debug = false
-  # Base value 
   base = '0.0.0'
   prefix = ''
 
@@ -96,15 +93,14 @@ begin
     major = Regexp.new(majorpatternstring)
   end
   
-  # Current directory
+  # Init Repo from current directory
   repository = Rugged::Repository.new(Dir.pwd) 
   tagcollection = Rugged::TagCollection.new(repository)
 
-  # Set up rugged to traverse our repoitory
-  head = repository.lookup(repository.head.target.oid)
 
   w = Rugged::Walker.new(repository)
-  # We need to walk 'backwards'
+  # Initialise the walker to start at current HEAD
+  head = repository.lookup(repository.head.target.oid)
   w.push(head)
 
   if input['--latest'].nil?
@@ -113,20 +109,26 @@ begin
   else
     candidates = []
     tail_glob = input['--latest']
-    puts "globbing for " + tail_glob if debug
+    
+    puts "Searching for at tag that matches the glob pattern: " + tail_glob if debug
 
     tagcollection.each(tail_glob+'*') do |tag|
-      puts "checking " + tag.name if debug
-      candidates << tag unless repository.merge_base(tag.target, head).nil?
+      unless repository.merge_base(tag.target, head).nil?
+        puts "Found matching tag on correct branch: " + tag.name if debug
+        candidates << tag
+      end
     end
     candidates.sort! {|a,b| a.target.time <=> b.target.time }
     latest_match = candidates.last
-    puts "Match: #{latest_match.target.oid}"
+    puts "Newest matching tag: #{latest_match.target.oid}" if debug
+    #set target of matching commit as the tail of our walker
     w.hide(latest_match.target)
+
+    #Use remainder of tag as the current semver version string
     base = latest_match.name.sub(tail_glob,'')
   end
-  # Set the intermediate result to the base
-  # X.Y.Z-SPECIAL
+
+  # Handle X.Y.Z-SPECIAL by saving SPECIAL part for later
   split = base.split('-')
   v_number = split[0].split('.')
   special = ''
@@ -137,7 +139,8 @@ begin
   major_bump = false
   minor_bump = false
   patch_bump = false
-#  puts "Tail:"+tail.oid
+
+  #walk through all commits looking for version bump requests
   w.each do |commit|
     puts "Commit: " + commit.oid if debug
     if major =~ commit.message
@@ -149,7 +152,6 @@ begin
     else
       patch_bump = true
     end
-    #If we find the commit. Abort
   end
 
 
