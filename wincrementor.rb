@@ -7,8 +7,8 @@ require 'rugged'
 
 doc = <<DOCOPT
 Usage:
-  #{__FILE__} [-t] [-p <prefix>] [-a <maj_p>] [-i <min_p>] <ref> [<semver_version_string>] 
-  #{__FILE__} [-t] [-p <prefix>] [-a <maj_p>] [-i <min_p>] --latest=<tag-glob> [<semver_version_string>] 
+  #{__FILE__} --latest=<tag-glob> [<semver_version_string>] [options]
+  #{__FILE__} <ref>               [<semver_version_string>] [options]
   #{__FILE__} -h|--help
 
 Options:
@@ -103,13 +103,13 @@ begin
   head = repository.lookup(repository.head.target.oid)
   w.push(head)
 
-  if input['--latest'].nil?
+  if input['--latest'].nil? || input['--latest'].none?
     tail = repository.rev_parse(input['<ref>'])
     w.hide(tail)
   else
     candidates = []
-    tail_glob = input['--latest']
-    
+    latest=input['--latest'].flatten
+    tail_glob = latest[0]
     puts "Searching for at tag that matches the glob pattern: " + tail_glob if debug
 
     tagcollection.each(tail_glob+'*') do |tag|
