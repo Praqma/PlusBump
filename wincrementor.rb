@@ -27,6 +27,15 @@ Options:
 
     Specify a prefix to add before the resulting version string
 
+  -s --special=<postfix>
+
+    Specify the "special" part of the resulting version string. 
+    This is any  part of the version string that comes after the dash, 
+    e.g. in 1.3.4-SNAPSHOT it is the string "SNAPSHOT". 
+    Note this is for the "output" side. 
+    Wincrementor will accept any special string on the input and preserve it, 
+    unless you specify `--special=""` or something else.
+
   -a --majorpattern=<major_pattern>
 
     Specify an alternative (regex) pattern that indicates a major version bump.
@@ -110,7 +119,9 @@ begin
       #set target of matching commit as the tail of our walker
       w.hide(latest_match.target)
       #Use remainder of tag as the current semver version string
-      base = latest_match.name.sub(tail_glob,'')
+      unless input['<semver_version_string>']
+        base = latest_match.name.sub(tail_glob,'')
+      end
     end
   end
 
@@ -118,9 +129,22 @@ begin
   split = base.split('-')
   v_number = split[0].split('.')
   special = ''
-  if (split[1])
-    special = '-'+split[1]
+#  if (split[1])
+#    special = '-'+split[1]
+#  end
+
+
+  if !input['--special'].nil? 
+    s = input['--special']
+    if s.empty?
+      special = ''
+    else 
+      special = '-'+ s
+    end
   end
+
+
+  #TODO: Above could probably be re-written to use the semver gem for parsing.
 
   major_bump = false
   minor_bump = false

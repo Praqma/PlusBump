@@ -47,6 +47,10 @@ Options:
 
     Specify a prefix to add before the resulting version string
 
+  -s --special=<postfix>
+
+    Specify the "special" part of the resulting version string. This is any  part of the version string that comes after the dash, e.g. in 1.3.4-SNAPSHOT it is the string "SNAPSHOT". Note this is for the "output" side. Wincrementor will accept any special string on the input and preserve it, unless you specify `--special=""` or something else.
+
   -a --majorpattern=<major_pattern>
 
     Specify an alternative (regex) pattern that indicates a major version bump.
@@ -57,3 +61,4 @@ Options:
     Specify an alternative (regex) pattern that indicates a minor version bump.
     E.g. --minorpattern='\+minor'
 ```
+
