@@ -118,14 +118,18 @@ begin
         candidates << tag
       end
     end
-    candidates.sort! {|a,b| a.target.time <=> b.target.time }
-    latest_match = candidates.last
-    puts "Newest matching tag: #{latest_match.target.oid}" if debug
-    #set target of matching commit as the tail of our walker
-    w.hide(latest_match.target)
 
-    #Use remainder of tag as the current semver version string
-    base = latest_match.name.sub(tail_glob,'')
+    if candidates.empty?
+      puts "No matching tag found for "+tail_glob
+    else
+      candidates.sort! {|a,b| a.target.time <=> b.target.time }
+      latest_match = candidates.last
+      puts "Newest matching tag: #{latest_match.target.oid}" if debug
+      #set target of matching commit as the tail of our walker
+      w.hide(latest_match.target)
+      #Use remainder of tag as the current semver version string
+      base = latest_match.name.sub(tail_glob,'')
+    end
   end
 
   # Handle X.Y.Z-SPECIAL by saving SPECIAL part for later
