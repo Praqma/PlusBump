@@ -1,3 +1,6 @@
+---
+maintainer: jkrag
+---
 # Automatic version bumping
 
 ### Initial "requirement" description
