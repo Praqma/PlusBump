@@ -1,0 +1,113 @@
+jobs:
+- name: wincrement-version
+  public: true
+  plan: 
+  - get: version
+  - get: tollgate
+    trigger: true
+  - task: version
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: 
+          repository: sharor/wincrementor 
+          tag: "1.0.0"
+      inputs: 
+        - name: tollgate
+      outputs: 
+        - name: versioned-tollgate
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          echo "- - - - - - - - - - Setup for modifying version on commit - - - - - - - - - -"
+          cd tollgate && git config --global user.email "concourse@places.com" && git config --global user.name "ConcourseCI"
+          ssh-keyscan github.com && git fetch && current=$(cat version) && originprefix="origin"
+          git branch -a --list
+          branch=$(git branch -r --list 'origin/wip/*') && wip=${branch#"  origin/"}
+          echo "- - - - - - - - - - Determine new version - - - - - - - - - -" 
+          echo $(ruby /wincrementor.rb origin/master $current)>version
+          git add version && git commit --amend --reuse-message HEAD
+          mv version ../versioned-tollgate/version
+  - put: tollgate
+    params:
+      repository: tollgate
+    timeout: 5m
+  - put: version
+    params: {file: versioned-tollgate/version}  
+
+#- name: build
+#  plan:
+#  - get: repository
+#    trigger: true
+#  - get: version
+#    passed: [wincrement-version]
+#  - put: docker-image
+#    params: 
+#      build: repository
+#      cache: false
+#      tag: version/version
+#      tag_as_latest: true      
+ #   on_failure:
+#      put: slack-alert
+#      params:
+ #       channel: '#concoursebuildresults'
+#        text_file: |
+#        text: |
+##          The build failed for wincrementor.
+
+resource_types:
+#- name: slack-notification
+#  type: docker-image
+#  source:
+#    repository: cfcommunity/slack-notification-resource
+#    tag: latest
+
+- name: tollgate
+  type: docker-image
+  source:
+    repository: groenborg/concourse-git-phlow
+    tag: '1.0.22'
+
+resources:
+#- name: repository
+#  type: git
+#  source:
+#    uri: git@github.com:Sharor/testrepo.git
+#    branch: mimicready 
+#    private_key: {{concourse-token}}
+
+#- name: slack-alert
+#  type: slack-notification
+#  source:
+#    url: {{slack-praqma}}
+
+#- name: docker-image
+#  type: docker-image
+#  source: 
+#    email: {{docker-hub-email}}
+#    username: {{docker-hub-username}}
+#    password: {{docker-hub-password}}
+#    repository: {{docker-repo}}
+
+- name: version
+  type: semver
+  source:
+    driver: git
+    initial_version: 0.0.0
+    uri: git@github.com:Sharor/testrepo.git
+    branch: version
+    file: version
+    private_key: {{concourse-token}}
+
+- name: tollgate
+  type: tollgate
+  source: 
+    prefixready: ready/
+    prefixwip: wip/
+    master: master
+    url: https://github.com/Sharor/testrepo.git
+    username: {{github-username}}
+    password: {{github-password}}
