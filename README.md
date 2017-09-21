@@ -65,3 +65,16 @@ Options:
     E.g. --minorpattern='\+minor'
 ```
 
+
+### Helping users
+If you decide to require bumps on every commit (e.g. instead of assuming +patch as default), then it can be very helpful to users set up a push hook (pre-receive on Git) that rejects commits without a bump.
+
+I have succesfully done this on BitBucket using the "Jira Hooks for BitBucket" plugin (that we were using anyway), and used the following regex:
+```
+(^|(.|\n)*\s)\+(major|minor|patch)($|\s(.|\n)*)
+```
+
+This RegEx should also be quite usable in other plugins or handwritten hooks as it does not require multiline or other swithes to be supported.
+It allows the `+bump` message to appear anywhere in the commit message as long as it is not adjacent to other text. (i.e. `my+patch` and `+patching` will be rejected.
+### Helping users``
+### Helping users
