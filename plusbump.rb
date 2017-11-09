@@ -14,33 +14,33 @@ Usage:
 Options:
   -h --help        Show this screen.
   -t --tag-commit  Actually tag HEAD with the version number computed.
-     
-  -l --latest=<tag-glob>  
+
+  -l --latest=<tag-glob>
 
     Specify a glob pattern to search for last matching tag instead of
     providing a specific ref.
     Will attempt to use everything after <tag-glob> as the version string
-    so be sure to provide _entire_ prefix. 
+    so be sure to provide _entire_ prefix.
     E.g. use "R_" if your versions are "R_1.2.3"
 
-  -p --prefix=<prefix>  
+  -p --prefix=<prefix>
 
     Specify a prefix to add before the resulting version string
 
   -s --special=<postfix>
 
-    Specify the "special" part of the resulting version string. 
-    This is any  part of the version string that comes after the dash, 
-    e.g. in 1.3.4-SNAPSHOT it is the string "SNAPSHOT". 
-    Note this is for the "output" side. 
-    Wincrementor will accept any special string on the input and preserve it, 
+    Specify the "special" part of the resulting version string.
+    This is any  part of the version string that comes after the dash,
+    e.g. in 1.3.4-SNAPSHOT it is the string "SNAPSHOT".
+    Note this is for the "output" side.
+    PlusBump will accept any special string on the input and preserve it,
     unless you specify `--special=""` or something else.
 
   -a --majorpattern=<major_pattern>
 
     Specify an alternative (regex) pattern that indicates a major version bump.
     E.g. --majorpattern='\\+major'
-    
+
   -i --minorpattern=<minor_pattern>
 
     Specify an alternative (regex) pattern that indicates a minor version bump.
@@ -48,15 +48,15 @@ Options:
 
 DOCOPT
 
-# Note: If you are reading the above usage in the source code and not using --help, 
-# then ignore the double escapes in the usage examples. 
+# Note: If you are reading the above usage in the source code and not using --help,
+# then ignore the double escapes in the usage examples.
 # On the command line you have to write --majorpattern='\+major'
 # The extra escape is to make it print that way in the usage message.
 
 begin
   input = Docopt::docopt(doc)
 
-  #puts input 
+  #puts input
   debug = false
 
   # Defaults
@@ -83,9 +83,9 @@ begin
     majorpatternstring = input['--minorpattern']
     major = Regexp.new(majorpatternstring)
   end
-  
+
   # Init Repo from current directory
-  repository = Rugged::Repository.new(Dir.pwd) 
+  repository = Rugged::Repository.new(Dir.pwd)
   tagcollection = Rugged::TagCollection.new(repository)
 
 
@@ -134,11 +134,11 @@ begin
 #  end
 
 
-  if !input['--special'].nil? 
+  if !input['--special'].nil?
     s = input['--special']
     if s.empty?
       special = ''
-    else 
+    else
       special = '-'+ s
     end
   end
@@ -177,7 +177,7 @@ begin
   elsif patch_bump
     result.patch += 1
   else
-    puts "No version increment"   
+    puts "No version increment"
   end
 
   final_res = prefix + (result.format "%M.%m.%p%s")
@@ -190,7 +190,7 @@ begin
   puts final_res
 
 rescue Docopt::Exit => e
-  puts "Wincrementor 1.2"
+  puts "PlusBump 1.3"
   puts ""
   puts e.message
 end
