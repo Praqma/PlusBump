@@ -4,6 +4,9 @@ RSpec.describe PlusBump, "#bump" do
   specify { 
     expect { PlusBump.bump(nil, "not_found") }.to output(/No matching tag found for not_found/).to_stdout 
   }
+  specify {
+    expect(`ruby bin/plusbump -blaha`).to match(/Usage:/)
+  }
   context "self smoke test" do
       it "should correctly increment minor to 0.1.0" do
         expect(PlusBump.bump("5a3cba405f73778b487d56fad3fd4083cfb112b5", nil)).to eq("0.1.0")
