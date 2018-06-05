@@ -3,14 +3,8 @@ require 'semver'
 require 'rugged'
 
 module PlusBump
-	def self.bump(ref, latest)
-		# Note: If you are reading the above usage in the source code and not using --help,
-		# then ignore the double escapes in the usage examples.
-		# On the command line you have to write --majorpattern='\+major'
-		# The extra escape is to make it print that way in the usage message.
-		  #puts input
-	  debug = false
-
+	def self.bump(ref, latest, debug: false)
+    
 	  # Defaults
 	  major = /\+major/
 	  minor = /\+minor/

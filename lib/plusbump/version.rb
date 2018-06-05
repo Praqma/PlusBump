@@ -1,3 +1,3 @@
 module PlusBump
-  VERSION = "1.4"
+  VERSION = "2.0-alpha"
 end
