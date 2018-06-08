@@ -74,3 +74,7 @@ I have successfully done this on BitBucket using the "Jira Hooks for BitBucket" 
 
 This RegEx should also be quite usable in other plugins or handwritten hooks as it does not require multiline or other switches to be supported.
 It allows the `+bump` message to appear anywhere in the commit message as long as it is not adjacent to other text. (i.e. `my+patch` and `+patching` will be rejected.
+
+
+## CodeScene analysis
+[![](https://codescene.io/projects/2928/status.svg) Get more details at **codescene.io**.](https://codescene.io/projects/2928/jobs/latest-successful/results)
