@@ -1,0 +1,34 @@
+properties([parameters([booleanParam(defaultValue: false, description: '', name: 'isRelease')])])
+
+node("dockerhost1") {
+
+    stage("checkout") {
+        checkout scm
+    } 
+       
+    stage("build") {
+        //Let's just use PAC container, it has ll the necessary tools installed
+        docker.image("praqma/pac").inside() {
+            sh 'gem install bundler'
+            sh 'bundler exec rake'
+        }
+    }
+
+    stage("changelog") {
+        pac()
+    }
+
+    stage("release") {
+        try {
+            if(params?.isRelease) {
+                echo "Building release"
+            } else {
+                echo "Not building release"
+            }
+    
+        } finally {
+            echo "Done with release"
+        }
+    }
+    
+}
