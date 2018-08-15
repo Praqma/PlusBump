@@ -9,10 +9,6 @@ multibranchPipelineJob("PlusBump") {
             credentialsId("github")
             remote("https://github.com/Praqma/PlusBump.git")
         }
-
-        triggers {
-            periodic(20)
-        }
     }
 
     configure {
