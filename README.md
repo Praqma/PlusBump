@@ -74,3 +74,14 @@ I have successfully done this on BitBucket using the "Jira Hooks for BitBucket" 
 
 This RegEx should also be quite usable in other plugins or handwritten hooks as it does not require multiline or other switches to be supported.
 It allows the `+bump` message to appear anywhere in the commit message as long as it is not adjacent to other text. (i.e. `my+patch` and `+patching` will be rejected.
+
+### Developer guide
+
+#### How to test
+
+Simply run `rake` for the simple test without output, and `rake doc` for the more verbose output. Test are located in the `spec` folder. 
+
+#### Install gem
+
+`rake install`
+
