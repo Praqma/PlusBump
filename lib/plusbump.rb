@@ -1,10 +1,10 @@
-require "plusbump/version"
+require_relative "plusbump/version"
 require 'semver'
 require 'rugged'
 
 module PlusBump
   def self.bump(ref, latest, debug: false)
-    
+
     # Defaults
     major = /\+major/
     minor = /\+minor/
@@ -50,7 +50,7 @@ module PlusBump
           puts "match.Name: #{latest_match.name}" if debug
           puts "Base: #{base}" if debug
         #end
-  
+
       end
     end
 

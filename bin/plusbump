@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 #encoding: utf-8
 require 'docopt'
-require 'plusbump'
+require_relative '../lib/plusbump'
 
 doc = <<DOCOPT
 Usage:
@@ -11,7 +11,7 @@ Usage:
   plusbump --version
 
 Arguments:
-    <ref> A git reference. If specified, PlusBump will search for bumps from HEAD back to this <ref> instead of searching for a tag. 
+    <ref> A git reference. If specified, PlusBump will search for bumps from HEAD back to this <ref> instead of searching for a tag.
 
 Options:
   -h --help        Show this screen.
@@ -23,9 +23,9 @@ Options:
     Will attempt to use everything after <tag-glob> as the version string
     so be sure to provide _entire_ prefix.
     E.g. use "R_" if your versions are "R_1.2.3"
-  
+
   --version       Shows current version of PlusBump
-  --debug         Debug flag 
+  --debug         Debug flag
 
 DOCOPT
 
@@ -37,7 +37,7 @@ DOCOPT
 begin
   # Parse Commandline Arguments
   input =  Docopt::docopt(doc, version: PlusBump::VERSION)
-  puts input if input['--debug'] 
+  puts input if input['--debug']
 rescue Docopt::Exit => e
   puts e.message
   exit
