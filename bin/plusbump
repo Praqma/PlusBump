@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+#encoding: utf-8
+require 'docopt'
+require 'plusbump'
+
+doc = <<DOCOPT
+Usage:
+  plusbump -h|--help
+  plusbump <ref> [options]
+  plusbump --latest=<tag-glob> [options]
+  plusbump --version
+
+Arguments:
+    <ref> A git reference. If specified, PlusBump will search for bumps from HEAD back to this <ref> instead of searching for a tag. 
+
+Options:
+  -h --help        Show this screen.
+
+  -l --latest=<tag-glob>
+
+    Specify a glob pattern to search for last matching tag instead of
+    providing a specific ref.
+    Will attempt to use everything after <tag-glob> as the version string
+    so be sure to provide _entire_ prefix.
+    E.g. use "R_" if your versions are "R_1.2.3"
+  
+  --version       Shows current version of PlusBump
+  --debug         Debug flag 
+
+DOCOPT
+
+# Note: If you are reading the above usage in the source code and not using --help,
+# then ignore the double escapes in the usage examples.
+# On the command line you have to write --majorpattern='\+major'
+# The extra escape is to make it print that way in the usage message.
+
+begin
+  # Parse Commandline Arguments
+  input =  Docopt::docopt(doc, version: PlusBump::VERSION)
+  puts input if input['--debug'] 
+rescue Docopt::Exit => e
+  puts e.message
+  exit
+end
+
+#TODO: input['--latest'].flatten[0]
+puts PlusBump.bump(input['<ref>'], input['--latest'], debug: input['--debug'])
+
+

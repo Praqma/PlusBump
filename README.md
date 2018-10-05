@@ -19,51 +19,6 @@ If no version string was specified bump the version 0.0.0, i.e. return either 1.
 ### Other features
 The tool already supports a few more features:
 
-```
-PlusBump 1.3
-
-Usage:
-  ./plusbump.rb --latest=<tag-glob> [<semver_version_string>] [options]
-  ./plusbump.rb <ref>               [<semver_version_string>] [options]
-  ./plusbump.rb -h|--help
-
-Options:
-  -h --help        Show this screen.
-  -t --tag-commit  Actually tag HEAD with the version number computed.
-
-  -l --latest=<tag-glob>
-
-    Specify a glob pattern to search for last matching tag instead of
-    providing a specific ref.
-    Will attempt to use everything after <tag-glob> as the version string
-    so be sure to provide _entire_ prefix.
-    E.g. use "R_" if your versions are "R_1.2.3"
-
-  -p --prefix=<prefix>
-
-    Specify a prefix to add before the resulting version string
-
-  -s --special=<postfix>
-
-    Specify the "special" part of the resulting version string.
-    This is any  part of the version string that comes after the dash,
-    e.g. in 1.3.4-SNAPSHOT it is the string "SNAPSHOT".
-    Note this is for the "output" side.
-    PlusBump will accept any special string on the input and preserve it,
-    unless you specify `--special=""` or something else.
-
-  -a --majorpattern=<major_pattern>
-
-    Specify an alternative (regex) pattern that indicates a major version bump.
-    E.g. --majorpattern='\+major'
-
-  -i --minorpattern=<minor_pattern>
-
-    Specify an alternative (regex) pattern that indicates a minor version bump.
-    E.g. --minorpattern='\+minor'
-```
-
-
 ### Helping users
 If you decide to require bumps on every commit (e.g. instead of assuming +patch as default), then it can be very helpful to users set up a push hook (pre-receive on Git) that rejects commits without a bump.
 
@@ -78,3 +33,10 @@ It allows the `+bump` message to appear anywhere in the commit message as long a
 
 ## CodeScene analysis
 [![](https://codescene.io/projects/2928/status.svg) Get more details at **codescene.io**.](https://codescene.io/projects/2928/jobs/latest-successful/results)
+=======
+### Developer guide
+
+#### How to test
+
+Simply run `rake` for the simple test without output, and `rake doc` for the more verbose output. Test are located in the `spec` folder. 
+
