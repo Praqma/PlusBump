@@ -14,11 +14,17 @@ RSpec.describe PlusBump, "#bump" do
       it "should increment major from first commit" do 
         expect(PlusBump.bump("e318c48368febb79309e7c371d99bb49fdd5f900", nil)).to eq("1.0.0")
       end
-      it "should increment to major when used against 0.1.*" do
+      it "should increment to major when used against 0.1.* and not be 0.1.0" do
         expect(PlusBump.bump(nil, "0.1.")).not_to eq("0.1.0")
       end
+      it "should increment to major when used against 0.1.*" do
+        expect(PlusBump.bump(nil, "0.1.")).to eq("1.0.0")
+      end    
       it "should increment to 1.0.0 when no tag found" do
         expect(PlusBump.bump(nil, "not_found")).to eq("1.0.0")
-      end  
+      end
+      it "should incremment to 3.0.0 when semver is prefix" do
+        expect(PlusBump.bump(nil, "2")).to eq("3.0.0")
+      end   
   end 
 end
