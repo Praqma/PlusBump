@@ -3,99 +3,143 @@ require 'semver'
 require 'rugged'
 
 module PlusBump
-  def self.bump(ref, latest, debug: false)
-    
-    # Defaults
-    major = /\+major/
-    minor = /\+minor/
-    patch = /\+patch/
-    base = '0.0.0'
-    prefix = ''
 
-    # Init Repo from current directory
-    repository = Rugged::Repository.new(Dir.pwd)
-    tagcollection = Rugged::TagCollection.new(repository)
+  # Module defaults
+  BASE = '0.0.0'
+  MAJOR = '+major'
+  MINOR = '+minor'
+  PATCH = '+patch'
 
+  @@repo = nil 
 
+  def self.get_repo
+    unless @@repo
+      @@repo = Rugged::Repository.new(Dir.pwd) 
+    end
+    @@repo
+  end
+
+  class Tag
+    def self.create(tag_name)
+      #TODO PlusBump.get_repo.create(tag_name, PlusBump.get_repo.head.target)
+      puts "Created tag #{tag_name}"
+    end 
+  end
+
+  def self.extract_number(partial)
+    if /\d+/.match(partial) 
+      /\d+/.match(partial)[0]
+    end
+  end
+
+  def self.extract_prefix(partial)
+    if /\D+/.match(partial) 
+      /\D+/.match(partial)[0]
+    end
+  end
+
+  def self.run(input) 
+    if input['tag']
+      bump_by_tag(latest: input['<tag-glob>'], prefix: input['--prefix'], debug: input['--debug'])
+    elsif input['ref']
+      bump_by_ref(ref: input['<ref>'], semver: input['<semver>'], prefix: input['--prefix'], debug: input['--debug'])
+    end  
+  end
+
+  def self.create_walker(repository)
     w = Rugged::Walker.new(repository)
     # Initialise the walker to start at current HEAD
     head = repository.lookup(repository.head.target.oid)
     w.push(head)
+    return w    
+  end
 
-    if latest.nil?
-      tail = repository.rev_parse(ref)
-      w.hide(tail)
-    else
-      candidates = []
-      puts "Searching for at tag that matches the glob pattern: " + latest if debug
-      tagcollection.each(latest+'*') do |tag|
-        unless repository.merge_base(tag.target, head).nil?
-          puts "Found matching tag on correct branch: " + tag.name if debug
-          candidates << tag
-        end
-      end
+  def self.bump_by_ref(args = {})
+    semver_string = args[:semver] ? args[:semver] : PlusBump::BASE
+    
+    w = create_walker(PlusBump.get_repo)
+    tail = PlusBump.get_repo.rev_parse(args[:ref])
+    w.hide(tail)
+    prefix = args[:prefix] ? args[:prefix] : '' 
 
-      if candidates.empty?
-        puts "No matching tag found for "+latest
-      else
-        candidates.sort! {|a,b| a.target.time <=> b.target.time }
-        latest_match = candidates.last
-        puts "Newest matching tag: #{latest_match.name}" if debug
-        puts "Newest matching tag sha: #{latest_match.target.oid}" if debug
-        #set target of matching commit as the tail of our walker
-        w.hide(latest_match.target)
-        #unless input['<semver_version_string>']
-          base = latest_match.name.sub(latest,'')
-          puts "latest: #{latest}" if debug
-          puts "match.Name: #{latest_match.name}" if debug
-          puts "Base: #{base}" if debug
-        #end
-  
-      end
+    v_number = semver_string.split('.')
+    v_special = semver_string.split('-')
+
+    if(prefix.empty?)
+      prefix = extract_prefix(v_number[0]) || ''
     end
 
-    # Handle X.Y.Z-SPECIAL by saving SPECIAL part for later
-    split = base.split('-')
-    v_number = split[0].split('.')
-    special = ''
+    # Current semver string
+    result = SemVer.new(extract_number(v_number[0]).to_i, v_number[1].to_i, v_number[2].to_i, '') #TODO: Fix special
 
-    #TODO: Above could probably be re-written to use the semver gem for parsing.
-
-    major_bump = false
-    minor_bump = false
-    patch_bump = false
-
-    #walk through all commits looking for version bump requests
-    w.each do |commit|
-      puts "Commit: " + commit.oid if debug
-      if major =~ commit.message
-        puts "bumps major" if debug
-        major_bump = true
-      elsif minor =~ commit.message
-        puts "bump minor" if debug
-        minor_bump = true
-      else
-        patch_bump = true
-      end
-    end
-
-    result = SemVer.new(v_number[0].to_i, v_number[1].to_i, v_number[2].to_i, special)
-
-    if major_bump
-      result.major += 1
-      result.minor = 0
-      result.patch = 0
-    elsif minor_bump
-      result.minor += 1
-      result.patch = 0
-    elsif patch_bump
-      result.patch += 1
-    else
-      puts "No version increment"
-    end
-
+    # Logic bump
+    bumping = bump_action(w, result)
     final_res = prefix + (result.format "%M.%m.%p%s")
-
     return final_res
+  end
+
+  def self.bump_by_tag(args = {})
+    base = '0.0.0'
+    # Init Repo from current directory
+    tagcollection = Rugged::TagCollection.new(PlusBump.get_repo)
+    w = create_walker(PlusBump.get_repo)
+    head = PlusBump.get_repo.lookup(PlusBump.get_repo.head.target.oid)
+    candidates = []
+    tagcollection.each(args[:latest]+'*') do |tag|
+      unless PlusBump.get_repo.merge_base(tag.target, head).nil?
+        candidates << tag
+      end
+    end
+
+    if candidates.empty?
+      puts "No matching tag found for "+args[:latest]
+    else
+      candidates.sort! {|a,b| a.target.time <=> b.target.time }
+      latest_match = candidates.last
+      #set target of matching commit as the tail of our walker
+      w.hide(latest_match.target)
+      base = latest_match.name.sub(args[:latest],'')
+      puts args[:debug]
+      puts "Found matching tag #{latest_match.name}" if args[:debug]
+    end
+    
+    v_number = base.split('.')
+    v_special = base.split('-')
+    prefix = args[:prefix] ? args[:prefix] : '' 
+
+    # Current semver string
+    result = SemVer.new(extract_number(v_number[0]).to_i, v_number[1].to_i, v_number[2].to_i, '') # TODO: FIX SPECIAL
+    # Logic bumps
+    bumping = bump_action(w, result)
+    final_res = prefix + (result.format "%M.%m.%p%s")
+    return final_res
+  end
+
+  def self.bump_action(walker, semver)
+    # Defaults
+    major = /\+major/
+    minor = /\+minor/
+    patch = /\+patch/
+    minor_bump = false
+
+    walker.each do |commit|
+      if major =~ commit.message
+        semver.major += 1
+        semver.minor = 0
+        semver.patch = 0
+        return :major
+      end
+      if minor =~ commit.message
+        minor_bump = true
+      end
+    end
+    if(minor_bump)
+      semver.minor += 1 
+      semver.patch = 0
+      return :minor
+    else
+      semver.patch += 1
+      return :patch
+    end     
   end
 end

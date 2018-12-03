@@ -6,23 +6,39 @@ require 'plusbump'
 doc = <<DOCOPT
 Usage:
   plusbump -h|--help
-  plusbump <ref> [options]
-  plusbump --latest=<tag-glob> [options]
+  plusbump ref <ref> <semver> [options]
+  plusbump tag <tag-glob> [<semver>] [options]
   plusbump --version
 
+Commands:
+  ref:
+    Bumps using a git ref as a base. 
+  tag:
+    Bumps using tags, uses glob patterns to list tags matching, and selects the latest 
+
 Arguments:
-    <ref> A git reference. If specified, PlusBump will search for bumps from HEAD back to this <ref> instead of searching for a tag. 
+    <ref>       A git reference. If specified, PlusBump will search for bumps from HEAD back to this <ref> instead of searching for a tag. 
+    <semver>    The base semver version to use as a base when outputting the bumped version.
+    <tag-glob>  Git glob pattern tags must match for eligability. The resulting version number tries to filter out the tag glob from the result. 
+
+                Examples:
+                  Numeric tag: '[0-9]', captures: 1.0.0, 2.0.0
+                  Version tag: 'v', captures: v1.0.0, v2.0.0  
 
 Options:
   -h --help        Show this screen.
 
-  -l --latest=<tag-glob>
+  -t --create-tag
 
-    Specify a glob pattern to search for last matching tag instead of
-    providing a specific ref.
-    Will attempt to use everything after <tag-glob> as the version string
-    so be sure to provide _entire_ prefix.
-    E.g. use "R_" if your versions are "R_1.2.3"
+    Tags the current commit with the result of the bump operation
+
+  -p --prefix=<prefix>
+
+    Specify the prefix for the new tag name. By default we do not include prefixes in the result.
+
+  -s --start-ref=<start_ref>
+
+    Indicates where the search should start. By default we use 'HEAD' as a starting point.
   
   --version       Shows current version of PlusBump
   --debug         Debug flag 
@@ -43,7 +59,8 @@ rescue Docopt::Exit => e
   exit
 end
 
-#TODO: input['--latest'].flatten[0]
-puts PlusBump.bump(input['<ref>'], input['--latest'], debug: input['--debug'])
-
+result = PlusBump.run(input)
+if input['--create-tag']
+  PlusBump::Tag.create(result)
+end
 
