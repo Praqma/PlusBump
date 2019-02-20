@@ -1,9 +1,11 @@
 require 'plusbump/version'
+require 'plusbump/usage'
 require 'semver'
 require 'rugged'
 
 # PlusBump main module
 module PlusBump
+
   # Module defaults
   BASE = '0.0.0'
   MAJOR = '+major'
@@ -38,7 +40,7 @@ module PlusBump
     /\D+/.match(partial)[0] if /\D+/ =~ partial
   end
 
-  def self.run(input)
+  def self.bump(input)
     if input['tag']
       bump_by_tag(latest: input['<tag-glob>'], prefix: input['--prefix'], debug: input['--debug'])
     elsif input['ref']
@@ -76,6 +78,12 @@ module PlusBump
     final_res = prefix + (result.format "%M.%m.%p%s")
   end
 
+  # Should return a Rugged::Tag object
+  def self.find_newest_matching_tag(candidates)
+    candidates.sort! { |a,b| a.target.time <=> b.target.time }
+    candidates.last
+  end
+
   def self.bump_by_tag(args = {})
     base = '0.0.0'
     # Init Repo from current directory
@@ -90,14 +98,13 @@ module PlusBump
     if candidates.empty?
       puts 'No matching tag found for ' + args[:latest]
     else
-      candidates.sort! { |a,b| a.target.time <=> b.target.time }
-      latest_match = candidates.last
+      latest_match = find_newest_matching_tag(candidates)
       # Set target of matching commit as the tail of our walker
       w.hide(latest_match.target)
       base = latest_match.name.sub(args[:latest],'')
       puts "Found matching tag #{latest_match.name}" if args[:debug]
     end
-    
+
     v_number = base.split('.')
     # v_special = base.split('-')
     prefix = args[:prefix] || ''
