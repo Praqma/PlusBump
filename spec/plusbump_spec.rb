@@ -12,11 +12,6 @@ def build_input(commandline)
 end
 
 RSpec.describe PlusBump, "bump" do
-
-  context 'testing' do
-    input = build_input("--from-ref 4343 --base-version=1.0.0 --debug")
-  end
-
   context '--from-ref used' do
     it 'should correctly increment minor to 0.1.0' do
       input = build_input("--from-ref 5a3cba405f73778b487d56fad3fd4083cfb112b5 --base-version 0.0.0")
@@ -37,11 +32,6 @@ RSpec.describe PlusBump, "bump" do
       input = build_input("--from-ref e318c48368febb79309e7c371d99bb49fdd5f900 --base-version 1.0.0")
       expect(PlusBump.bump(input)).to eq('2.0.0')
     end
-
-    it 'should correctly increment major output becmes v2.0.0' do
-      input = build_input("--from-ref e318c48368febb79309e7c371d99bb49fdd5f900 --base-version 1.0.0 --new-prefix=v")
-      expect(PlusBump.bump(input)).to eq('v2.0.0')
-    end
   end
 
 #  context '--semver and --prefix specified in ref' do
@@ -54,20 +44,11 @@ RSpec.describe PlusBump, "bump" do
     it 'should increment to major when used against 0.1.* and not be 0.1.0' do
       input = build_input("--from-tag 0.1. --base-version 0.0.0")
       expect(PlusBump.bump(input)).not_to eq('0.1.0')
-      #expect(PlusBump.bump_by_tag(latest: '0.1.')).not_to eq('0.1.0')
     end
     it 'should increment to major when used against 0.1.*' do
       input = build_input("--from-tag 0.1. --base-version 0.0.0")
       expect(PlusBump.bump(input)).not_to eq('0.1.0')
-      #expect(PlusBump.bump_by_tag(latest: '0.1.')).to eq('1.0.0')
-    end
-    it 'should increment to 1.0.0 when no tag found' do
-      input = build_input("--from-tag not_found --base-version 0.0.0")
-      pending "Did we decide on how to handle tag not found?"
-    end
-    it 'should incremment to 3.0.0 when semver is prefix' do
-      #expect(PlusBump.bump_by_tag(latest: '[0-9]')).to eq('3.0.0')
-      pending "This one i don't remember"
+      expect(PlusBump.bump(input)).to eq('1.0.0')
     end
   end
 
@@ -75,12 +56,18 @@ RSpec.describe PlusBump, "bump" do
     it 'should increment to 3.0.0 when used with 2.0.0 as tag glob' do
       input = build_input("--from-tag 2.0.0 --base-version-from-tag='' --new-prefix=Test_")
       expect(PlusBump.bump(input)).to eq('Test_3.0.0')
-      #expect(PlusBump.bump_by_tag(latest: '[0-9]', prefix: 'Test_')).to eq('Test_3.0.0')
+    end
+    it 'should increment to 2.1.0 when used with 2.0.0 as tag glob and no matching major pattern (minor matches)' do
+      input = build_input("--from-tag 2.0.0 --base-version-from-tag='' --new-prefix=Test_ --major-pattern=not_there")
+      expect(PlusBump.bump(input)).to eq('Test_2.1.0')
     end
     it 'should increment to correctly with tag prefix' do
-      input = build_input("--from-tag R_ --base-version-from-tag='R_'")
+      input = build_input("--from-tag R_ --base-version-from-tag=R_")
       expect(PlusBump.bump(input)).to eq('2.1.0')
-      #expect(PlusBump.bump_by_tag(latest: 'R_', prefix: 'Test_')).to eq('2.1.0')
+    end
+    it 'should increment correctly with empty base-version-from-tag' do
+      input = build_input("--from-tag R_ --base-version-from-tag=''")
+      expect(PlusBump.bump(input)).to eq('2.1.0')
     end
   end
 

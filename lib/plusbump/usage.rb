@@ -24,13 +24,14 @@ Options:
   --base-version=<semver>                 Take semver version as argument and use as base for computed new version
   --base-version-from-tag=<strip-prefix>  Find semver base version from the found tag. Optionally strip a prefix (e.g. "R_"). [default: ""]
 
+
   --new-prefix=<new-prefix>               Optionally specify a prefix for the output computed SemVer. (e.g. "R_", or "WOULD_BE_").
 
   --create-tag                            PlusBump tags the HEAD commit with the computed new SemVer (incl. optional prefix). This will not do a "git push".
 
-  # --majorpattern=<major>
-  # --minorpattern=<minor>
-  # --patchpattern=<patch>
+  --patch-pattern=<pattern>               Specify regex pattern for bumping patch version
+  --minor-pattern=<pattern>               Specify regex pattern for bumping minor version
+  --major-pattern=<pattern>               Specify regex pattern for bumping major version
 DOCOPT
 
 end
