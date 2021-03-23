@@ -1,4 +1,4 @@
-FROM ruby:2.5
+FROM ruby:2.6-slim
 RUN ruby --version
 RUN apt-get update && \
     apt-get install cmake -y
